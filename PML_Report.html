@@ -119,16 +119,16 @@ for (n in 1:nRuns){
         print(sprintf (&quot;Case:  %i, Accuracy:  %.2f%%&quot;, n, acc*100))
         lstRF[[n]] &lt;- rfObj
 }</code></pre>
-<pre><code>## [1] &quot;Case:  1, Accuracy:  99.62%&quot;
-## [1] &quot;Case:  2, Accuracy:  99.59%&quot;
-## [1] &quot;Case:  3, Accuracy:  99.72%&quot;
+<pre><code>## [1] &quot;Case:  1, Accuracy:  99.57%&quot;
+## [1] &quot;Case:  2, Accuracy:  99.75%&quot;
+## [1] &quot;Case:  3, Accuracy:  99.57%&quot;
 ## [1] &quot;Case:  4, Accuracy:  99.62%&quot;
-## [1] &quot;Case:  5, Accuracy:  99.49%&quot;
-## [1] &quot;Case:  6, Accuracy:  99.54%&quot;
-## [1] &quot;Case:  7, Accuracy:  99.57%&quot;
-## [1] &quot;Case:  8, Accuracy:  99.64%&quot;
-## [1] &quot;Case:  9, Accuracy:  99.67%&quot;
-## [1] &quot;Case:  10, Accuracy:  99.46%&quot;</code></pre>
+## [1] &quot;Case:  5, Accuracy:  99.59%&quot;
+## [1] &quot;Case:  6, Accuracy:  99.59%&quot;
+## [1] &quot;Case:  7, Accuracy:  99.54%&quot;
+## [1] &quot;Case:  8, Accuracy:  99.59%&quot;
+## [1] &quot;Case:  9, Accuracy:  99.59%&quot;
+## [1] &quot;Case:  10, Accuracy:  99.52%&quot;</code></pre>
 <pre class="r"><code>avgAcc &lt;- sumAcc / nRuns
 sprintf(&quot;Overall Accuracy:  %.2f%%&quot;, avgAcc*100)</code></pre>
 <pre><code>## [1] &quot;Overall Accuracy:  99.59%&quot;</code></pre>
