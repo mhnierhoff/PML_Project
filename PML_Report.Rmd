@@ -1,0 +1,117 @@
+#Practical Machine Learning Report 
+
+##Executive Summary
+
+This report is made for the purposes of the Practical Machine Learning course offered by John Hopkins University through the Coursera platform. The data for this project come from this source: [http://groupware.les.inf.puc-rio.br/har](http://groupware.les.inf.puc-rio.br/har).
+
+There are two datasets, the training and the testing dat set. The scope is to train the first data set by means of machine learning and make predictions in the second one. The trained variable is the way the exercises are being made and is a factor variable with five outcomes, A, B, C, D and E.
+
+##Loading The Data Set
+
+```{r, echo=TRUE}
+library(caret)
+library(randomForest)
+```
+
+```{r, eval=FALSE}
+data1 <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+data2 <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+filename1 <- "pml-training.csv"
+filename2 <- "pml-testing.csv"
+download.file(url=data1, destfile=filename1,method="curl")
+download.file(url=data2, destfile=filename2,method="curl")
+```
+
+The train data set provided (pml-training.csv) was be used to train the model. The training dataset has 19622 rows x 160 columns. This dataset has sufficient rows of data to split into training and cross-validation data sets. The 160 columns will be reduced by a combination of intuition and experimentation.
+
+```{r}
+training <- read.csv("pml-training.csv")
+dim(training)
+```
+
+##Cleaning The Data Set
+
+There are several columns that are either blank or NA in the test dataset. Therefore, as an initial strategy, these columns will be dropped. Further, all timestamp, user_name, and window related variables are also dropped, as they intuitively should not be used in the model. Thus, the training and test datasets are loaded and transformed as follows:
+
+```{r}
+testing <- read.csv("pml-testing.csv") 
+columns <- c("roll_belt", "pitch_belt", "yaw_belt", 
+             "total_accel_belt", "gyros_belt_x", "gyros_belt_y", "gyros_belt_z", "accel_belt_x", 
+             "accel_belt_y", "accel_belt_z", "magnet_belt_x", "magnet_belt_y", "magnet_belt_z", 
+             "roll_arm", "pitch_arm", "yaw_arm", "total_accel_arm", "gyros_arm_x", "gyros_arm_y", 
+             "gyros_arm_z", "accel_arm_x", "accel_arm_y", "accel_arm_z", "magnet_arm_x", "magnet_arm_y", 
+             "magnet_arm_z", "roll_dumbbell", "pitch_dumbbell", "yaw_dumbbell", "gyros_dumbbell_x", 
+             "gyros_dumbbell_y", "gyros_dumbbell_z", "accel_dumbbell_x", "accel_dumbbell_y", 
+             "accel_dumbbell_z", "magnet_dumbbell_x", "magnet_dumbbell_y", "magnet_dumbbell_z", 
+             "roll_forearm", "pitch_forearm", "yaw_forearm", "total_accel_forearm", "gyros_forearm_x", 
+             "gyros_forearm_y", "gyros_forearm_z", "accel_forearm_x", "accel_forearm_y", "accel_forearm_z", 
+             "magnet_forearm_x", "magnet_forearm_y", "magnet_forearm_z")
+
+training <- training[, c(columns, "classe")]
+training$magnet_forearm_y <- as.integer(training$magnet_forearm_y)
+training$magnet_forearm_z <- as.integer(training$magnet_forearm_z)
+dim(training)
+```
+
+
+```{r}
+print (paste("All NA removed:  ", any(is.na(training))==FALSE))
+```
+
+##Selection Of The Statistical Prediction Models
+
+As an intial strategy, the Random Forest method is chosen as this method is known to have high accuracy, especially for classification types of problems. If this model is found to be inaccurate or has poor performance (i.e. long run duration) then alternative methods, such as Boosting, will be explored.In order to calculate an out-of-sample accuracy estimate, the training data set is divided into two datasets: train and xvalid (cross validation). The system is then trained on the train dataset and the accuracy of predictions is compared against xvalid. This is repeated 10 times, and the average accuracy is used as the out-of-sample accuracy estimate.
+
+```{r}
+lstRF <- list()
+nRuns <- 10
+sumAcc <- 0
+for (n in 1:nRuns){
+        inTrain <- createDataPartition(training$classe, p=0.8, list=FALSE)
+        train <- training[inTrain,]
+        xvalid <- training[-inTrain,]
+        rfObj = randomForest(classe ~ ., data = train, ntree=100)
+        predX <-  predict(rfObj, xvalid[,columns])
+        acc <- sum(predX == xvalid$classe) / nrow(xvalid)
+        sumAcc <- sumAcc + acc
+        print(sprintf ("Case:  %i, Accuracy:  %.2f%%", n, acc*100))
+        lstRF[[n]] <- rfObj
+}
+avgAcc <- sumAcc / nRuns
+sprintf("Overall Accuracy:  %.2f%%", avgAcc*100)
+```
+
+##Predicting The Results
+Now, apply the model to the testing data set (20 records) and predict the classes:
+
+```{r}
+lstPred <- list()
+for (n in 1:nRuns){
+        pred <- predict(lstRF[[n]], testing)
+        lstPred[[n]] <- pred
+        #Check for consistent prediction
+        if (n > 1)
+                print(sprintf("Pred %i same as previous: %s", n, all(pred == lstPred[[n-1]])))
+}
+```
+
+
+```{r, eval=FALSE}
+setwd("~/Desktop/PML_Project/Results")
+pml_write_files = function(x){
+        n = length(x)
+        for(i in 1:n){
+                filename = paste0("problem_id_",i,".txt")
+                write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE, eol="")
+        }
+}
+pred <- lstPred[[1]]
+pml_write_files(pred)
+```
+
+Submiting the answers gives a 20/20 score for the assignement.
+
+```{r}
+sessionInfo()
+```
+
